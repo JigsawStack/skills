@@ -1,4 +1,4 @@
-# Interfaze AI — Agent Skills
+# Interfaze Skills
 
 Installable [Agent Skills](https://agentskills.io) for [Interfaze AI](https://interfaze.ai). This repo follows the open Agent Skills format and is compatible with the `skills` CLI.
 
