@@ -10,7 +10,7 @@ Interfaze AI is a proprietary multimodal AI model accessible through an OpenAI-c
 
 | Skill | Purpose |
 |---|---|
-| [vocr](skills/vocr/) | OCR and visual text extraction from images, scans, PDFs, invoices, receipts, and forms |
+| [ocr](skills/ocr/) | OCR and visual text extraction from images, scans, PDFs, invoices, receipts, and forms |
 | [speech-to-text](skills/speech-to-text/) | Speech-to-text transcription from audio files, voice notes, and recordings |
 | [structured-output](skills/structured-output/) | Convert model responses into strict JSON or schema-constrained structured objects |
 | [object-detection](skills/object-detection/) | Detect and locate objects in images with bounding box coordinates |
@@ -22,19 +22,19 @@ Interfaze AI is a proprietary multimodal AI model accessible through an OpenAI-c
 Install all skills:
 
 ```bash
-npx skills add JigsawStack/interfaze-skills
+npx skills add JigsawStack/skills
 ```
 
 Install a single skill:
 
 ```bash
-npx skills add JigsawStack/interfaze-skills --skill vocr
+npx skills add JigsawStack/skills --skill ocr
 ```
 
 List available skills without installing:
 
 ```bash
-npx skills add JigsawStack/interfaze-skills --list
+npx skills add JigsawStack/skills --list
 ```
 
 ## Setup
@@ -45,7 +45,7 @@ Interfaze AI uses an OpenAI-compatible API. Set your API key and base URL:
 import { createOpenAI } from "@ai-sdk/openai";
 
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```

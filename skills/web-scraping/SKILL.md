@@ -23,7 +23,7 @@ Extract structured data from web pages by providing a URL and a schema for the d
 ## When not to use this skill
 
 - The user wants to search the web for information without a specific URL — use `web-search`
-- The user has an image to process — use `vocr` or `object-detection`
+- The user has an image to process — use `ocr` or `object-detection`
 - The user has audio — use `speech-to-text`
 - The URL points to a downloadable file rather than a web page
 
@@ -43,7 +43,7 @@ import { generateObject } from "ai";
 import z from "zod";
 
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```

@@ -4,7 +4,7 @@ This repo contains installable Agent Skills for Interfaze AI. Follow these rules
 
 ## General rules
 
-- Interfaze AI is a proprietary model. Which easily work with OpenAI SDK by setting the baseURL to https://interfaze.ai/v1
+- Interfaze AI is a proprietary model. Which easily work with OpenAI SDK by setting the baseURL to https://api.interfaze.ai/v1
 - Only document how to use the API — inputs, outputs, and patterns.
 - Interfaze exposes an OpenAI-compatible API. Use the Vercel AI SDK (`@ai-sdk/openai`) with `baseURL` pointed at the Interfaze endpoint.
 - The model name is `interfaze-beta`.
@@ -32,7 +32,7 @@ This repo contains installable Agent Skills for Interfaze AI. Follow these rules
 - Use `generateText` when plain text output is sufficient.
 - Define schemas with Zod. Use `.describe()` on fields when the field name alone is ambiguous.
 - Pass images as `{ type: "image", image: "<url>" }` in message content arrays.
-- Pass audio as `{ type: "file", data: "<url>", mediaType: "audio/mp3" }` in message content arrays.
+- Pass audio as `{ type: "file", data: "<url>", mediaType: "audio/mpeg" }` in message content arrays. Use the canonical IANA MIME type (e.g. `audio/mpeg` for MP3, `audio/wav`, `audio/mp4`).
 
 ## Source of truth
 

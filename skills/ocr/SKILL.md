@@ -1,5 +1,5 @@
 ---
-name: vocr
+name: ocr
 description: >
   Use Interfaze AI for OCR and visual text extraction from images, screenshots,
   scans, PDFs, invoices, receipts, forms, and documents with complex layouts.
@@ -8,7 +8,7 @@ description: >
   or "pull the data from this photo" without explicitly mentioning OCR.
 ---
 
-# VOCR — Visual OCR with Interfaze AI
+# OCR — Visual OCR with Interfaze AI
 
 Extract text and structured fields from images and scanned documents using Interfaze AI's vision OCR capability.
 
@@ -44,7 +44,7 @@ import { generateObject } from "ai";
 import z from "zod";
 
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```
@@ -99,5 +99,5 @@ const response = await generateObject({
 
 ## Available references
 
-- [references/api.md](references/api.md) — API usage details for VOCR
+- [references/api.md](references/api.md) — API usage details for OCR
 - [references/examples.md](references/examples.md) — Additional trigger examples and patterns

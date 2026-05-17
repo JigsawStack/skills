@@ -1,4 +1,4 @@
-# VOCR — Trigger Examples
+# OCR — Trigger Examples
 
 ## User asks that should activate this skill
 

@@ -15,7 +15,7 @@
 
 - "Search for the best restaurants in NYC" — use `web-search` (no specific URL)
 - "What's the current price of Bitcoin?" — use `web-search`
-- "Read the text in this image" — use `vocr`
+- "Read the text in this image" — use `ocr`
 - "Transcribe this audio" — use `speech-to-text`
 - "Convert this JSON to a different format" — use `structured-output`
 

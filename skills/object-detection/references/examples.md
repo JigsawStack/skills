@@ -13,7 +13,7 @@
 
 ## User asks that should NOT activate this skill
 
-- "Read the text from this receipt" — use `vocr` (text extraction, not spatial detection)
+- "Read the text from this receipt" — use `ocr` (text extraction, not spatial detection)
 - "Transcribe this audio" — use `speech-to-text`
 - "Classify this image as indoor or outdoor" — classification, not detection
 - "Scrape products from this website" — use `web-scraping`

@@ -3,21 +3,21 @@
 ## Endpoint
 
 ```
-POST https://interfaze.ai/v1/chat/completions
+POST https://api.interfaze.ai/v1/chat/completions
 ```
 
 ## Authentication
 
 ```ts
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```
 
 ## Image input format
 
-Same as VOCR — images are passed in the message content array:
+Same as OCR — images are passed in the message content array:
 
 ```ts
 {
@@ -72,8 +72,30 @@ z.object({
 })
 ```
 
+## Run task mode (raw output)
+
+For maximum speed and lowest cost when you don't need a custom schema, set `<task>object_detection</task>` in the system message. The model returns a fixed structure with `detected_objects` (each with `bounds` and `label`) and `gui_elements`.
+
+```ts
+const response = await generateObject({
+  model: interfaze.chat("interfaze-beta"),
+  system: "<task>object_detection</task>",
+  schema: z.any(),
+  messages: [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "Detect objects in this image" },
+        { type: "image", image: "<url>" },
+      ],
+    },
+  ],
+});
+```
+
 ## Tips
 
 - Be specific in the prompt about what to detect. "Find all vehicles" works better than "detect objects."
 - Use `.describe()` on the name field to guide the model on how to label detected objects.
 - Add a `category` field to the schema if you need objects grouped by type.
+- Bounding box coordinates are returned in pixels relative to the original image dimensions.

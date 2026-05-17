@@ -24,7 +24,7 @@ Generate outputs into strict, schema-validated JSON using Zod schemas and the Ve
 ## When not to use this skill
 
 - The user wants free-form text, summaries, or conversational responses
-- The input is an image that needs OCR first — use `vocr`, then apply structured output
+- The input is an image that needs OCR first — use `ocr`, then apply structured output
 - The input is audio — use `speech-to-text` first, then apply structured output if needed
 
 ## Workflow
@@ -42,7 +42,7 @@ import { generateObject } from "ai";
 import z from "zod";
 
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```
@@ -80,7 +80,7 @@ const response = await generateObject({
 });
 ```
 
-## Example: Combined with image input (VOCR + structured output)
+## Example: Combined with image input (OCR + structured output)
 
 ```ts
 const response = await generateObject({

@@ -13,7 +13,7 @@
 ## User asks that should NOT activate this skill
 
 - "Scrape all products from this Amazon page" — use `web-scraping`
-- "Extract text from this image" — use `vocr`
+- "Extract text from this image" — use `ocr`
 - "Transcribe this recording" — use `speech-to-text`
 - "What is 2 + 2?" — no web search needed
 - "Explain the difference between let and const" — general knowledge

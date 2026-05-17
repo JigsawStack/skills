@@ -13,8 +13,8 @@
 
 ## User asks that should NOT activate this skill
 
-- "Read the text in this image" — use `vocr`
-- "Extract data from this PDF scan" — use `vocr`
+- "Read the text in this image" — use `ocr`
+- "Extract data from this PDF scan" — use `ocr`
 - "Generate speech from this text" — not supported
 - "Summarize this article" — no audio input involved
 - "Detect objects in this photo" — use `object-detection`

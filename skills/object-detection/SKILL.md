@@ -23,7 +23,7 @@ Detect and locate objects in images with bounding box coordinates using Interfaz
 
 ## When not to use this skill
 
-- The user only wants to read text from an image — use `vocr`
+- The user only wants to read text from an image — use `ocr`
 - The user wants to transcribe audio — use `speech-to-text`
 - The input is not an image
 - The user wants image classification without location data
@@ -44,7 +44,7 @@ import { generateObject } from "ai";
 import z from "zod";
 
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```

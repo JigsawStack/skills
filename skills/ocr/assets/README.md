@@ -1,4 +1,4 @@
-# VOCR Assets
+# OCR Assets
 
 Place static resources here such as:
 

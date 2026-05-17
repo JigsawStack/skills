@@ -24,7 +24,7 @@ Search the web and retrieve current information using Interfaze AI's built-in we
 
 - The question can be answered from the model's existing knowledge
 - The user wants to scrape a specific URL for structured data — use `web-scraping`
-- The user has an image or audio to process — use `vocr`, `object-detection`, or `speech-to-text`
+- The user has an image or audio to process — use `ocr`, `object-detection`, or `speech-to-text`
 - The user wants to extract data from a specific known page — use `web-scraping`
 
 ## Workflow
@@ -43,7 +43,7 @@ import { generateObject, generateText } from "ai";
 import z from "zod";
 
 const interfaze = createOpenAI({
-  baseURL: "https://interfaze.ai/v1",
+  baseURL: "https://api.interfaze.ai/v1",
   apiKey: process.env.INTERFAZE_API_KEY,
 });
 ```
