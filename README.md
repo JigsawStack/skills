@@ -8,33 +8,33 @@ Interfaze AI is a proprietary multimodal AI model accessible through an OpenAI-c
 
 ## Included skills
 
-| Skill | Purpose |
-|---|---|
-| [ocr](skills/ocr/) | OCR and visual text extraction from images, scans, PDFs, invoices, receipts, and forms |
-| [speech-to-text](skills/speech-to-text/) | Speech-to-text transcription from audio files, voice notes, and recordings |
-| [structured-output](skills/structured-output/) | Convert model responses into strict JSON or schema-constrained structured objects |
-| [object-detection](skills/object-detection/) | Detect and locate objects in images with bounding box coordinates |
-| [web-search](skills/web-search/) | Search the web for current information, facts, prices, and news |
-| [web-scraping](skills/web-scraping/) | Extract structured data from specific web pages and URLs |
+| Skill                                          | Purpose                                                                                |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [ocr](skills/ocr/)                             | OCR and visual text extraction from images, scans, PDFs, invoices, receipts, and forms |
+| [speech-to-text](skills/speech-to-text/)       | Speech-to-text transcription from audio files, voice notes, and recordings             |
+| [structured-output](skills/structured-output/) | Convert model responses into strict JSON or schema-constrained structured objects      |
+| [object-detection](skills/object-detection/)   | Detect and locate objects in images with bounding box coordinates                      |
+| [web-search](skills/web-search/)               | Search the web for current information, facts, prices, and news                        |
+| [web-scraping](skills/web-scraping/)           | Extract structured data from specific web pages and URLs                               |
 
 ## Installation
 
 Install all skills:
 
 ```bash
-npx skills add JigsawStack/skills
+npx skills add JigsawStack/interfaze-skills
 ```
 
 Install a single skill:
 
 ```bash
-npx skills add JigsawStack/skills --skill ocr
+npx skills add JigsawStack/interfaze-skills --skill ocr
 ```
 
 List available skills without installing:
 
 ```bash
-npx skills add JigsawStack/skills --list
+npx skills add JigsawStack/interfaze-skills --list
 ```
 
 ## Setup
