@@ -8,95 +8,190 @@ Interfaze AI uses an OpenAI-compatible chat completions endpoint:
 POST https://api.interfaze.ai/v1/chat/completions
 ```
 
-## Authentication
-
-Pass your API key via the `Authorization` header or configure it through the SDK:
-
-```ts
-const interfaze = createOpenAI({
-  baseURL: "https://api.interfaze.ai/v1",
-  apiKey: process.env.INTERFAZE_API_KEY,
-});
-```
+Model name: `interfaze-beta`.
 
 ## Image input format
 
-Images are passed in the message content array:
+### TypeScript — Vercel AI SDK
 
 ```ts
 {
   role: "user",
   content: [
-    { type: "image", image: "<url-or-base64>" },
-    { type: "text", text: "Your extraction prompt here." },
+    { type: "text", text: "..." },
+    { type: "image", mediaType: "image/jpeg", image: "<url-or-base64>" },
   ],
 }
 ```
 
-Supported image sources:
-- Public URLs (HTTPS)
-- Base64-encoded image data
-
-## Structured extraction
-
-Use `generateObject` with a Zod schema to get typed, structured output:
+### TypeScript — OpenAI SDK / LangChain SDK
 
 ```ts
-const response = await generateObject({
-  model: interfaze.chat("interfaze-beta"),
-  messages: [...],
-  schema: z.object({
-    // Define your expected output shape
-  }),
-});
-
-// response.object contains the typed result
+{
+  role: "user",
+  content: [
+    { type: "text", text: "..." },
+    { type: "image_url", image_url: { url: "<url>" } },
+  ],
+}
 ```
 
-## Plain text extraction
+### Python — OpenAI SDK / LangChain SDK
 
-Use `generateText` when you only need raw text:
+```python
+{
+    "role": "user",
+    "content": [
+        {"type": "text", "text": "..."},
+        {"type": "image_url", "image_url": {"url": "<url>"}},
+    ],
+}
+```
+
+Supported image sources: public HTTPS URLs and base64-encoded data.
+
+## PDF and document input
+
+### TypeScript — Vercel AI SDK
 
 ```ts
-const response = await generateText({
+{
+  role: "user",
+  content: [
+    { type: "text", text: "Extract the text and tables from this document" },
+    { type: "file", data: "<pdf-url>", mediaType: "application/pdf" },
+  ],
+}
+```
+
+### TypeScript — OpenAI SDK / LangChain SDK
+
+```ts
+{
+  role: "user",
+  content: [
+    { type: "text", text: "Extract the text and tables from this document" },
+    {
+      type: "file",
+      file: {
+        filename: "document.pdf",
+        file_data: "<url-or-base64>",
+      },
+    },
+  ],
+}
+```
+
+### Python — OpenAI SDK / LangChain SDK
+
+```python
+{
+    "role": "user",
+    "content": [
+        {"type": "text", "text": "Extract the text and tables from this document"},
+        {
+            "type": "file",
+            "file": {
+                "filename": "document.pdf",
+                "file_data": "<url-or-base64>",
+            },
+        },
+    ],
+}
+```
+
+## Run task mode (raw OCR output)
+
+For raw OCR output (no custom schema), set `<task>ocr</task>` in the system message. The response's `precontext` contains `extracted_text` and `sections` with line-level bounding boxes and per-word confidence scores.
+
+### TypeScript — OpenAI SDK
+
+```ts
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
+
+const response = await interfaze.chat.completions.create({
+  model: "interfaze-beta",
+  messages: [
+    { role: "system", content: "<task>ocr</task>" },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "Extract all text from this image" },
+        { type: "image_url", image_url: { url: "<url>" } },
+      ],
+    },
+  ],
+  response_format: zodResponseFormat(z.any(), "empty_schema"),
+});
+```
+
+### TypeScript — Vercel AI SDK
+
+```ts
+import { generateObject } from "ai";
+import { z } from "zod";
+
+const { object } = await generateObject({
   model: interfaze.chat("interfaze-beta"),
+  system: "<task>ocr</task>",
+  schema: z.any(),
   messages: [
     {
       role: "user",
       content: [
-        { type: "image", image: "<url>" },
-        { type: "text", text: "Extract all text from this image." },
+        { type: "text", text: "Extract all text from this image" },
+        { type: "image", mediaType: "image/jpeg", image: "<url>" },
       ],
     },
   ],
 });
-
-// response.text contains the extracted text
 ```
 
-## PDF and document input
+### Python — OpenAI SDK
 
-PDFs are passed the same way images are, via the `file` part:
-
-```ts
-{
-  role: "user",
-  content: [
-    { type: "file", data: "<pdf-url>", mediaType: "application/pdf" },
-    { type: "text", text: "Extract the text and tables from this document." },
-  ],
-}
+```python
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[
+        {"role": "system", "content": "<task>ocr</task>"},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Extract all text from this image"},
+                {"type": "image_url", "image_url": {"url": "<url>"}},
+            ],
+        },
+    ],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "empty_schema",
+            "schema": {"type": "object", "properties": {}, "additionalProperties": True},
+        },
+    },
+)
 ```
 
-## Run task mode (raw output)
+## Precontext metadata
 
-For raw OCR output (no custom schema), set `<task>ocr</task>` in the system message. The response contains `extracted_text` and `sections` with line-level bounding boxes and per-word confidence scores.
+For non-task calls, raw OCR results (bounding boxes, per-word confidence scores) are returned on `response.precontext` (OpenAI SDK / Python) or `response.body?.precontext` (Vercel AI SDK).
 
 ```ts
-const response = await generateObject({
+// @ts-expect-error precontext is not typed
+const precontext = response.precontext ?? response.body?.precontext;
+console.log("OCR Results:", precontext[0]?.result);
+```
+
+## Plain text extraction
+
+Use `generateText` (Vercel AI SDK) or omit `response_format` (OpenAI / LangChain SDK) when you only need raw text. Example for the Vercel AI SDK:
+
+```ts
+import { generateText } from "ai";
+
+const { text } = await generateText({
   model: interfaze.chat("interfaze-beta"),
-  system: "<task>ocr</task>",
-  schema: z.any(),
   messages: [
     {
       role: "user",
@@ -109,13 +204,9 @@ const response = await generateObject({
 });
 ```
 
-## Precontext metadata
-
-When using the OCR capability through `generateObject`, the response also includes a `precontext` array with raw OCR metadata (bounding boxes, confidence scores). Access it via `response.body?.precontext`.
-
 ## Tips
 
-- Use `.describe()` on Zod fields when the field name alone is ambiguous.
+- Use `.describe()` / `Field(description=...)` when the field name alone is ambiguous.
 - For multilingual text, specify the target language in the prompt or schema field descriptions.
 - For layout-aware extraction with bounding boxes, include coordinate fields in your schema.
 - 100+ languages including mixed-language documents are supported.

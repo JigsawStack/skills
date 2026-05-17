@@ -10,7 +10,7 @@ description: >
 
 # Web Search with Interfaze AI
 
-Search the web and retrieve current information using Interfaze AI's built-in web search capability.
+Search the web and retrieve current information using Interfaze AI's built-in web search index. No tool config required — just send a prompt that needs current information.
 
 ## When to use this skill
 
@@ -30,17 +30,27 @@ Search the web and retrieve current information using Interfaze AI's built-in we
 ## Workflow
 
 1. Identify what information the user needs from the web.
-2. Formulate a clear search prompt that describes what to find.
-3. Use `generateObject` with a schema matching the expected result shape, or `generateText` for a plain summary.
-4. Interfaze handles the web search and returns results directly.
-5. Return the findings in the format the user requested.
+2. Formulate a clear search prompt.
+3. Use a structured-output call when you want typed results, or a plain text call for a natural-language summary.
+4. The model returns results directly; raw hits are available via `precontext`.
 
 ## Setup
 
+### TypeScript — OpenAI SDK
+
+```ts
+import OpenAI from "openai";
+
+const interfaze = new OpenAI({
+  baseURL: "https://api.interfaze.ai/v1",
+  apiKey: process.env.INTERFAZE_API_KEY,
+});
+```
+
+### TypeScript — Vercel AI SDK
+
 ```ts
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateObject, generateText } from "ai";
-import z from "zod";
 
 const interfaze = createOpenAI({
   baseURL: "https://api.interfaze.ai/v1",
@@ -48,41 +58,199 @@ const interfaze = createOpenAI({
 });
 ```
 
-## Example: Search and extract structured results
+### TypeScript — LangChain SDK
 
 ```ts
-const response = await generateObject({
-  model: interfaze.chat("interfaze-beta"),
-  prompt: "Search for the current price of Bitcoin and Ethereum.",
-  schema: z.object({
-    results: z.array(
-      z.object({
-        name: z.string(),
-        price_usd: z.string(),
-        change_24h: z.string().nullable(),
-      })
-    ),
-  }),
+import { ChatOpenAI } from "@langchain/openai";
+
+const interfaze = new ChatOpenAI({
+  configuration: { baseURL: "https://api.interfaze.ai/v1" },
+  apiKey: process.env.INTERFAZE_API_KEY,
+  model: "interfaze-beta",
 });
 ```
 
-## Example: Research a topic
+### Python — OpenAI SDK
 
-```ts
-const response = await generateText({
-  model: interfaze.chat("interfaze-beta"),
-  prompt: "What are the latest developments in quantum computing as of 2026?",
-});
+```python
+from openai import OpenAI
 
-console.log(response.text);
+interfaze = OpenAI(
+    base_url="https://api.interfaze.ai/v1",
+    api_key="<your-api-key>",
+)
 ```
 
-## Example: Look up a person or company
+### Python — LangChain SDK
+
+```python
+from langchain_openai import ChatOpenAI
+
+interfaze = ChatOpenAI(
+    base_url="https://api.interfaze.ai/v1",
+    api_key="<your-api-key>",
+    model="interfaze-beta",
+)
+```
+
+## Example: Basic web search (text summary)
+
+### TypeScript — OpenAI SDK
 
 ```ts
-const response = await generateObject({
+const response = await interfaze.chat.completions.create({
+  model: "interfaze-beta",
+  messages: [{ role: "user", content: "Latest news on Nvidia" }],
+});
+
+console.log(response.choices[0].message.content);
+```
+
+### TypeScript — Vercel AI SDK
+
+```ts
+import { generateText } from "ai";
+
+const { text } = await generateText({
   model: interfaze.chat("interfaze-beta"),
-  prompt: "Find information about Acme Corp from their website and LinkedIn.",
+  prompt: "Latest news on Nvidia",
+});
+
+console.log(text);
+```
+
+### TypeScript — LangChain SDK
+
+```ts
+const response = await interfaze.invoke("Latest news on Nvidia");
+
+console.log(response.content);
+```
+
+### Python — OpenAI SDK
+
+```python
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[{"role": "user", "content": "Latest news on Nvidia"}],
+)
+
+print(response.choices[0].message.content)
+```
+
+### Python — LangChain SDK
+
+```python
+response = interfaze.invoke("Latest news on Nvidia")
+
+print(response.content)
+```
+
+## Example: Structured web search
+
+### TypeScript — OpenAI SDK
+
+```ts
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
+
+const NvidiaNewsSchema = z.object({
+  summary: z.string(),
+  current_stock_price: z.number(),
+  links: z.array(z.string()),
+});
+
+const response = await interfaze.chat.completions.create({
+  model: "interfaze-beta",
+  messages: [{ role: "user", content: "Latest news on Nvidia" }],
+  response_format: zodResponseFormat(NvidiaNewsSchema, "nvidia_news_schema"),
+});
+```
+
+### TypeScript — Vercel AI SDK
+
+```ts
+import { generateObject } from "ai";
+import { z } from "zod";
+
+const NvidiaNewsSchema = z.object({
+  summary: z.string(),
+  current_stock_price: z.number(),
+  links: z.array(z.string()),
+});
+
+const { object } = await generateObject({
+  model: interfaze.chat("interfaze-beta"),
+  schema: NvidiaNewsSchema,
+  prompt: "Latest news on Nvidia",
+});
+```
+
+### TypeScript — LangChain SDK
+
+```ts
+import { z } from "zod";
+
+const NvidiaNewsSchema = z.object({
+  summary: z.string(),
+  current_stock_price: z.number(),
+  links: z.array(z.string()),
+});
+
+const structuredModel = interfaze.withStructuredOutput(NvidiaNewsSchema);
+
+const response = await structuredModel.invoke("Latest news on Nvidia");
+```
+
+### Python — OpenAI SDK
+
+```python
+from typing import List
+from pydantic import BaseModel
+
+class NvidiaNewsSchema(BaseModel):
+    summary: str
+    current_stock_price: float
+    links: List[str]
+
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[{"role": "user", "content": "Latest news on Nvidia"}],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {"name": "nvidia_news_schema", "schema": NvidiaNewsSchema.model_json_schema()},
+    },
+)
+```
+
+### Python — LangChain SDK
+
+```python
+from typing import List
+from pydantic import BaseModel
+
+class NvidiaNewsSchema(BaseModel):
+    summary: str
+    current_stock_price: float
+    links: List[str]
+
+structured_llm = interfaze.with_structured_output(NvidiaNewsSchema)
+
+response = structured_llm.invoke("Latest news on Nvidia")
+```
+
+For structured queries, Interfaze may also follow up with a web extract pass — that result appears as a separate `precontext` entry with `name: "web_extract"`.
+
+## Example: Look up a company
+
+### TypeScript — Vercel AI SDK
+
+```ts
+import { generateObject } from "ai";
+import { z } from "zod";
+
+const { object } = await generateObject({
+  model: interfaze.chat("interfaze-beta"),
   schema: z.object({
     company_name: z.string(),
     description: z.string(),
@@ -90,10 +258,15 @@ const response = await generateObject({
     industry: z.string(),
     key_people: z.array(z.string()),
   }),
+  prompt: "Find information about Acme Corp from their website and LinkedIn.",
 });
 ```
 
+## Coverage
+
+Interfaze's web search covers research indexes (biology, finance, medicine, law, arxiv), social platforms (LinkedIn, X, personal sites), financial data (stocks, forex, crypto, SEC filings), and general (news, events, products, company info).
+
 ## Available references
 
-- [references/api.md](references/api.md) — API usage details for web search
+- [references/api.md](references/api.md) — API usage details, precontext metadata
 - [references/examples.md](references/examples.md) — Additional trigger examples and patterns

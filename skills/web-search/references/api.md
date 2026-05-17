@@ -6,58 +6,79 @@
 POST https://api.interfaze.ai/v1/chat/completions
 ```
 
-## Authentication
-
-```ts
-const interfaze = createOpenAI({
-  baseURL: "https://api.interfaze.ai/v1",
-  apiKey: process.env.INTERFAZE_API_KEY,
-});
-```
+Model name: `interfaze-beta`.
 
 ## How it works
 
-Interfaze AI has built-in web search. You do not need to configure a separate search tool or API. Simply include a prompt that requires current information, and the model will search the web as needed.
+Interfaze AI has built-in web search. You do not need to configure a separate search tool or API. Send a prompt that requires current information and the model searches the web as needed.
 
 ## Structured search results
 
-Use `generateObject` to get structured results:
+Use the structured-output mechanism of your SDK to get typed results:
 
 ```ts
-const response = await generateObject({
+// TypeScript — Vercel AI SDK
+const { object } = await generateObject({
   model: interfaze.chat("interfaze-beta"),
+  schema: z.object({ /* expected result shape */ }),
   prompt: "Search for ...",
-  schema: z.object({
-    // Define your expected result shape
-  }),
 });
+```
+
+```python
+# Python — OpenAI SDK
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[{"role": "user", "content": "Search for ..."}],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {"name": "schema_name", "schema": Model.model_json_schema()},
+    },
+)
 ```
 
 ## Plain text search
 
-Use `generateText` for a natural language summary:
-
 ```ts
-const response = await generateText({
+// TypeScript — Vercel AI SDK
+import { generateText } from "ai";
+
+const { text } = await generateText({
   model: interfaze.chat("interfaze-beta"),
   prompt: "What is the current ...",
 });
 ```
 
+```python
+# Python — OpenAI SDK
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[{"role": "user", "content": "What is the current ..."}],
+)
+```
+
 ## Precontext metadata
 
-The raw search results (title, description, content, snippets, URL for each hit) are available on the response's `precontext` array. For structured queries, Interfaze may also follow up with a web extract pass — that result appears as a separate `precontext` entry with `name: "web_extract"`.
+Raw search results (`title`, `description`, `content`, `snippets`, `url` per hit) are returned on the response's `precontext` array. For structured queries, a follow-up web extract may also appear as a `precontext` entry with `name: "web_extract"`.
 
 ```ts
-const { object, response } = await generateObject({
-  model: interfaze.chat("interfaze-beta"),
-  prompt: "...",
-  schema: z.object({ ... }),
-});
+// TypeScript — OpenAI SDK
+// @ts-expect-error precontext is not typed
+const precontext = response.precontext;
+console.log(precontext[0]?.result); // array of search hits
+```
 
+```ts
+// TypeScript — Vercel AI SDK
+const { object, response } = await generateObject({ /* ... */ });
 // @ts-expect-error precontext is not typed
 const precontext = response.body?.precontext;
-// precontext[0].name === "search", precontext[0].result is the list of hits
+```
+
+```python
+# Python — OpenAI SDK
+precontext = getattr(response, "precontext", None)
+print(precontext[0]["result"] if precontext else None)
 ```
 
 ## Coverage
@@ -73,5 +94,5 @@ Interfaze's web search covers:
 
 - Be specific in your search prompt. "Find the price of X on Amazon" works better than "look up X."
 - Use structured output schemas when you need machine-readable results.
-- A web search is automatically triggered when the prompt requires current information — no extra tool config is needed.
+- A web search is automatically triggered when the prompt requires current information.
 - Combine with other skills: search the web, then use `structured-output` to normalize the results.

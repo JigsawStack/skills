@@ -11,7 +11,7 @@ description: >
 
 # Structured Output with Interfaze AI
 
-Generate outputs into strict, schema-validated JSON using Zod schemas and the Vercel AI SDK for any task.
+Generate outputs into strict, schema-validated JSON using Zod (TypeScript) or Pydantic (Python) schemas.
 
 ## When to use this skill
 
@@ -30,16 +30,29 @@ Generate outputs into strict, schema-validated JSON using Zod schemas and the Ve
 ## Workflow
 
 1. Identify the target output shape from the user's request.
-2. Define a Zod schema that matches the expected structure.
-3. Use `generateObject` with the schema to get validated output.
-4. The response is typed and validated — use `response.object` directly.
+2. Define a Zod (TypeScript) or Pydantic (Python) schema that matches the expected structure.
+3. Pass the schema via the SDK's structured-output mechanism:
+   - Vercel AI SDK: `generateObject({ schema })`
+   - OpenAI SDK: `response_format` with `zodResponseFormat` (TS) or `json_schema` (Python)
+   - LangChain SDK: `withStructuredOutput` / `with_structured_output`
 
 ## Setup
 
+### TypeScript — OpenAI SDK
+
+```ts
+import OpenAI from "openai";
+
+const interfaze = new OpenAI({
+  baseURL: "https://api.interfaze.ai/v1",
+  apiKey: process.env.INTERFAZE_API_KEY,
+});
+```
+
+### TypeScript — Vercel AI SDK
+
 ```ts
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateObject } from "ai";
-import z from "zod";
 
 const interfaze = createOpenAI({
   baseURL: "https://api.interfaze.ai/v1",
@@ -47,29 +60,158 @@ const interfaze = createOpenAI({
 });
 ```
 
-## Example: Extract structured data from a prompt
+### TypeScript — LangChain SDK
 
 ```ts
-const response = await generateObject({
-  model: interfaze.chat("interfaze-beta"),
-  prompt: "Write a Python script to check CPU type using the subprocess module.",
-  schema: z.object({
-    code: z.string(),
-    sample_input: z.string(),
-    sample_output: z.string(),
-  }),
+import { ChatOpenAI } from "@langchain/openai";
+
+const interfaze = new ChatOpenAI({
+  configuration: { baseURL: "https://api.interfaze.ai/v1" },
+  apiKey: process.env.INTERFAZE_API_KEY,
+  model: "interfaze-beta",
+});
+```
+
+### Python — OpenAI SDK
+
+```python
+from openai import OpenAI
+
+interfaze = OpenAI(
+    base_url="https://api.interfaze.ai/v1",
+    api_key="<your-api-key>",
+)
+```
+
+### Python — LangChain SDK
+
+```python
+from langchain_openai import ChatOpenAI
+
+interfaze = ChatOpenAI(
+    base_url="https://api.interfaze.ai/v1",
+    api_key="<your-api-key>",
+    model="interfaze-beta",
+)
+```
+
+## Example: Generate a structured object from a prompt
+
+### TypeScript — OpenAI SDK
+
+```ts
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
+
+const CodeSchema = z.object({
+  code: z.string(),
+  sample_input: z.string(),
+  sample_output: z.string(),
 });
 
-console.log(response.object);
-// { code: "...", sample_input: "...", sample_output: "..." }
+const response = await interfaze.chat.completions.create({
+  model: "interfaze-beta",
+  messages: [
+    { role: "user", content: "Write a Python script to check CPU type using subprocess." },
+  ],
+  response_format: zodResponseFormat(CodeSchema, "code_schema"),
+});
+
+console.log(response.choices[0].message.content);
+```
+
+### TypeScript — Vercel AI SDK
+
+```ts
+import { generateObject } from "ai";
+import { z } from "zod";
+
+const CodeSchema = z.object({
+  code: z.string(),
+  sample_input: z.string(),
+  sample_output: z.string(),
+});
+
+const { object } = await generateObject({
+  model: interfaze.chat("interfaze-beta"),
+  schema: CodeSchema,
+  prompt: "Write a Python script to check CPU type using subprocess.",
+});
+
+console.log(object);
+```
+
+### TypeScript — LangChain SDK
+
+```ts
+import { z } from "zod";
+
+const CodeSchema = z.object({
+  code: z.string(),
+  sample_input: z.string(),
+  sample_output: z.string(),
+});
+
+const structuredModel = interfaze.withStructuredOutput(CodeSchema);
+
+const response = await structuredModel.invoke([
+  { role: "user", content: "Write a Python script to check CPU type using subprocess." },
+]);
+
+console.log(response);
+```
+
+### Python — OpenAI SDK
+
+```python
+from pydantic import BaseModel
+
+class CodeSchema(BaseModel):
+    code: str
+    sample_input: str
+    sample_output: str
+
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[
+        {"role": "user", "content": "Write a Python script to check CPU type using subprocess."},
+    ],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {"name": "code_schema", "schema": CodeSchema.model_json_schema()},
+    },
+)
+
+print(response.choices[0].message.content)
+```
+
+### Python — LangChain SDK
+
+```python
+from pydantic import BaseModel
+
+class CodeSchema(BaseModel):
+    code: str
+    sample_input: str
+    sample_output: str
+
+structured_llm = interfaze.with_structured_output(CodeSchema)
+
+response = structured_llm.invoke("Write a Python script to check CPU type using subprocess.")
+
+print(response)
 ```
 
 ## Example: Array of structured objects
 
+### TypeScript — Vercel AI SDK
+
 ```ts
-const response = await generateObject({
+import { generateObject } from "ai";
+import { z } from "zod";
+
+const { object } = await generateObject({
   model: interfaze.chat("interfaze-beta"),
-  prompt: "List the top 5 programming languages by popularity.",
   schema: z.array(
     z.object({
       name: z.string(),
@@ -77,38 +219,41 @@ const response = await generateObject({
       primary_use_case: z.string(),
     })
   ),
+  prompt: "List the top 5 programming languages by popularity.",
 });
 ```
 
-## Example: Combined with image input (OCR + structured output)
+### Python — OpenAI SDK
 
-```ts
-const response = await generateObject({
-  model: interfaze.chat("interfaze-beta"),
-  messages: [
-    {
-      role: "user",
-      content: [
-        { type: "image", image: "https://example.com/document.jpg" },
-        { type: "text", text: "Extract information from the image based on the schema." },
-      ],
+```python
+from typing import List
+from pydantic import BaseModel
+
+class Language(BaseModel):
+    name: str
+    rank: int
+    primary_use_case: str
+
+class LanguagesSchema(BaseModel):
+    languages: List[Language]
+
+response = interfaze.chat.completions.create(
+    model="interfaze-beta",
+    messages=[{"role": "user", "content": "List the top 5 programming languages by popularity."}],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {"name": "languages_schema", "schema": LanguagesSchema.model_json_schema()},
     },
-  ],
-  schema: z.object({
-    full_first_name: z.string(),
-    full_last_name: z.string(),
-    full_address: z.string().nullable(),
-    email: z.string().nullable(),
-    id_type: z.string(),
-  }),
-});
+)
 ```
+
+The other SDK variants follow the basic-object pattern with the schema replaced.
 
 ## Schema design tips
 
-- Use `.nullable()` for fields that may not be present in the source.
-- Use `.describe()` to clarify ambiguous fields — the model reads these descriptions.
-- Use `z.array()` at the top level when extracting lists of items.
+- Use `.nullable()` (Zod) or `Optional[T] = None` (Pydantic) for fields that may not be present.
+- Use `.describe()` (Zod) or `Field(description=...)` (Pydantic) to clarify ambiguous fields — the model reads these descriptions.
+- Use `z.array(...)` / `List[...]` at the top level when extracting lists of items.
 - Keep schemas focused. Prefer multiple targeted calls over one massive schema.
 
 ## Available references
